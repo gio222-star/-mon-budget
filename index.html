@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#1d6e56">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Mon Budget">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="icon" href="icon-192.png">
+<title>Mon argent, sous contrôle</title>
+<style>
+  :root{
+    --ink:#1c2b28;
+    --ink-soft:#516b64;
+    --paper:#f6f4ee;
+    --card:#ffffff;
+    --line:#e2ded2;
+    --green:#1d6e56;
+    --green-soft:#e3efe9;
+    --red:#a3402f;
+    --red-soft:#f6e6e2;
+    --gold:#b8862f;
+    --gold-soft:#f4ecdb;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --ink:#eae7dd;
+      --ink-soft:#a3ab9e;
+      --paper:#161b19;
+      --card:#20261f;
+      --line:#333a30;
+      --green:#4fb98f;
+      --green-soft:#1e332a;
+      --red:#e08573;
+      --red-soft:#3a2420;
+      --gold:#e0b45f;
+      --gold-soft:#3a2f18;
+    }
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+    background:var(--paper);
+    color:var(--ink);
+    padding:20px 14px 60px;
+  }
+  .wrap{max-width:640px;margin:0 auto;}
+  header{margin-bottom:18px;}
+  h1{font-size:22px;font-weight:700;margin:0 0 4px;letter-spacing:-0.01em;}
+  .sub{font-size:13px;color:var(--ink-soft);margin:0;}
+  .banner{
+    background:var(--green);color:#fff;border-radius:10px;
+    padding:12px 14px;font-size:13px;margin:16px 0;line-height:1.5;
+  }
+  .stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;}
+  .stat{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px;}
+  .stat .label{font-size:11px;color:var(--ink-soft);margin:0 0 4px;}
+  .stat .value{font-size:19px;font-weight:700;margin:0;}
+  .value.pos{color:var(--green);}
+  .value.neg{color:var(--red);}
+  .save-card{
+    background:var(--gold-soft);border:1px solid var(--gold);border-radius:10px;
+    padding:12px 14px;display:flex;justify-content:space-between;align-items:center;
+    margin-bottom:10px;
+  }
+  .save-card .label{font-size:13px;color:var(--gold);font-weight:600;}
+  .save-card .value{font-size:18px;font-weight:700;color:var(--gold);}
+  section{
+    background:var(--card);border:1px solid var(--line);border-radius:12px;
+    padding:14px;margin-bottom:14px;
+  }
+  h2{font-size:15px;font-weight:700;margin:0 0 4px;}
+  .hint{font-size:12px;color:var(--ink-soft);margin:0 0 10px;}
+  .row-form{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;}
+  .row-form.expense{grid-template-columns:1fr 1fr;}
+  input,select{
+    width:100%;padding:8px 9px;border:1px solid var(--line);border-radius:7px;
+    font-size:13px;background:var(--card);color:var(--ink);
+  }
+  .full{grid-column:1 / -1;}
+  button{
+    background:var(--green);color:#fff;border:none;border-radius:7px;
+    padding:9px 14px;font-size:13px;font-weight:600;cursor:pointer;width:100%;
+  }
+  button:hover{opacity:0.9;}
+  button.secondary{background:transparent;color:var(--ink);border:1px solid var(--line);}
+  table{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:6px;}
+  th{text-align:left;color:var(--ink-soft);font-weight:500;padding:5px 4px;border-bottom:1px solid var(--line);}
+  td{padding:7px 4px;border-bottom:1px solid var(--line);}
+  td.amount{text-align:right;font-weight:600;white-space:nowrap;}
+  .tag{
+    display:inline-block;padding:2px 8px;border-radius:5px;font-size:11px;
+    background:var(--green-soft);color:var(--green);
+  }
+  .del{background:none;border:none;color:var(--red);cursor:pointer;font-size:15px;width:auto;padding:0 4px;}
+  .total-row td{font-weight:700;border-top:2px solid var(--line);border-bottom:none;}
+  .cat-row{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
+  .cat-name{width:88px;font-size:12px;color:var(--ink-soft);flex-shrink:0;}
+  .bar-bg{flex:1;background:var(--paper);border-radius:4px;height:8px;overflow:hidden;}
+  .bar-fill{height:8px;background:var(--green);border-radius:4px;}
+  .cat-amount{width:64px;text-align:right;font-size:12px;font-weight:600;}
+  .accounts{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+  .account{background:var(--paper);border-radius:8px;padding:10px;}
+  .account .label{font-size:11px;color:var(--ink-soft);margin:0 0 4px;}
+  .account input{border:none;background:transparent;font-size:16px;font-weight:700;padding:0;}
+  .goal-inputs{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;}
+  .goal-bar-bg{background:var(--paper);border-radius:5px;height:12px;overflow:hidden;}
+  .goal-bar-fill{height:12px;background:var(--gold);border-radius:5px;}
+  .goal-top{display:flex;justify-content:space-between;font-size:12px;margin-bottom:6px;color:var(--ink-soft);}
+  footer{display:flex;gap:8px;margin-top:6px;}
+  .empty{font-size:12px;color:var(--ink-soft);text-align:center;padding:10px 0;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <h1>Mon argent, sous contrôle</h1>
+    <p class="sub">Pour freelances payés en mobile money ou virement</p>
+  </header>
+
+  <div class="banner">Ajoute une ligne à chaque fois que tu gagnes ou dépenses de l'argent. Tout se calcule automatiquement.</div>
+
+  <div class="stats">
+    <div class="stat">
+      <p class="label">J'ai gagné ce mois-ci</p>
+      <p class="value pos" id="totalIncome">0 FCFA</p>
+    </div>
+    <div class="stat">
+      <p class="label">J'ai dépensé ce mois-ci</p>
+      <p class="value neg" id="totalExpense">0 FCFA</p>
+    </div>
+  </div>
+
+  <div class="save-card">
+    <span class="label">Il me reste à épargner ce mois-ci</span>
+    <span class="value" id="netSavings">0 FCFA</span>
+  </div>
+
+  <section>
+    <h2>Ce que j'ai gagné ce mois-ci</h2>
+    <p class="hint">Ajoute une ligne dès que tu reçois un paiement, quel que soit le canal.</p>
+    <div class="row-form">
+      <input type="date" id="inDate">
+      <input type="text" id="inSource" placeholder="Source (ex: client web)">
+      <select id="inCanal">
+        <option>Wave</option>
+        <option>Orange Money</option>
+        <option>MTN MoMo</option>
+        <option>Moov Money</option>
+        <option>Virement</option>
+        <option>PayPal</option>
+        <option>Espèces</option>
+      </select>
+      <input type="number" id="inAmount" placeholder="Montant FCFA">
+      <button class="full" onclick="addIncome()">Ajouter ce revenu</button>
+      <p class="full" id="inError" style="display:none;color:var(--red);font-size:12px;margin:2px 0 0;"></p>
+    </div>
+    <table>
+      <thead><tr><th>Date</th><th>Source</th><th>Canal</th><th style="text-align:right">FCFA</th><th></th></tr></thead>
+      <tbody id="incomeTable"></tbody>
+    </table>
+    <p class="empty" id="incomeEmpty">Aucun revenu ajouté pour l'instant.</p>
+    <p class="hint" style="margin-top:6px;">Les lignes grisées sont d'un autre mois — elles ne comptent pas dans le total.</p>
+  </section>
+
+  <section>
+    <h2>Où part mon argent</h2>
+    <p class="hint">Ajoute une ligne dès que tu dépenses, en choisissant la catégorie.</p>
+    <div class="row-form expense">
+      <input type="date" id="exDate">
+      <input type="text" id="exDesc" placeholder="Description">
+      <select id="exCat">
+        <option>Logement</option>
+        <option>Nourriture</option>
+        <option>Transport</option>
+        <option>Business</option>
+        <option>Santé</option>
+        <option>Loisirs</option>
+        <option>Extra / imprévu</option>
+      </select>
+      <input type="number" id="exAmount" placeholder="Montant FCFA">
+      <button class="full" onclick="addExpense()">Ajouter cette dépense</button>
+      <p class="full" id="exError" style="display:none;color:var(--red);font-size:12px;margin:2px 0 0;"></p>
+    </div>
+    <div id="categoryBars" style="margin-top:12px;"></div>
+    <table style="margin-top:14px;">
+      <thead><tr><th>Date</th><th>Description</th><th>Catégorie</th><th style="text-align:right">FCFA</th><th></th></tr></thead>
+      <tbody id="expenseTable"></tbody>
+    </table>
+    <p class="empty" id="expenseEmpty">Aucune dépense ajoutée pour l'instant.</p>
+    <p class="hint" style="margin-top:6px;">Les lignes grisées sont d'un autre mois — elles ne comptent pas dans le total.</p>
+  </section>
+
+  <section>
+    <h2>Combien j'ai sur chaque compte</h2>
+    <p class="hint">Ouvre chaque appli, regarde le solde, tape-le ici. Rien d'automatique.</p>
+    <div class="accounts">
+      <div class="account"><p class="label">Wave</p><input type="number" id="accWave" value="0" oninput="save()"></div>
+      <div class="account"><p class="label">Orange Money</p><input type="number" id="accOM" value="0" oninput="save()"></div>
+      <div class="account"><p class="label">MTN MoMo</p><input type="number" id="accMoMo" value="0" oninput="save()"></div>
+      <div class="account"><p class="label">Autre / espèces</p><input type="number" id="accOther" value="0" oninput="save()"></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Mon objectif d'épargne</h2>
+    <p class="hint">1. Fixe un montant à épargner. 2. Note ce que tu as vraiment mis de côté. 3. La barre se remplit toute seule.</p>
+    <div class="goal-inputs">
+      <div><p class="label" style="font-size:11px;color:var(--ink-soft);margin:0 0 4px;">Objectif du mois</p><input type="number" id="goalTarget" value="0" oninput="renderGoal();save()"></div>
+      <div><p class="label" style="font-size:11px;color:var(--ink-soft);margin:0 0 4px;">Épargne actuelle</p><input type="number" id="goalCurrent" value="0" oninput="renderGoal();save()"></div>
+    </div>
+    <div class="goal-top"><span id="goalText">0 / 0 FCFA</span><span id="goalPercent">0%</span></div>
+    <div class="goal-bar-bg"><div class="goal-bar-fill" id="goalBar" style="width:0%"></div></div>
+  </section>
+
+  <p class="hint" style="text-align:center;margin:0 0 8px;">Tes données se sauvegardent seules sur cet appareil. Utilise les boutons ci-dessous seulement si tu changes d'appareil.</p>
+  <footer>
+    <button class="secondary" onclick="exportData()">Télécharger une sauvegarde</button>
+    <button class="secondary" onclick="document.getElementById('importFile').click()">Importer une sauvegarde</button>
+    <input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(event)">
+  </footer>
+
+</div>
+
+<script>
+let incomes = [];
+let expenses = [];
+const canalColors = {};
+
+function fmt(n){
+  return Math.round(n).toLocaleString('fr-FR') + ' FCFA';
+}
+
+function addIncome(){
+  const date = document.getElementById('inDate').value;
+  const source = document.getElementById('inSource').value.trim();
+  const canal = document.getElementById('inCanal').value;
+  const amount = parseFloat(document.getElementById('inAmount').value);
+  const errEl = document.getElementById('inError');
+  if(!date || !source || !amount || amount <= 0){
+    errEl.textContent = 'Remplis la source et un montant valide avant d\'ajouter.';
+    errEl.style.display = 'block';
+    return;
+  }
+  errEl.style.display = 'none';
+  incomes.push({date, source, canal, amount});
+  document.getElementById('inSource').value = '';
+  document.getElementById('inAmount').value = '';
+  render();
+  save();
+}
+
+function addExpense(){
+  const date = document.getElementById('exDate').value;
+  const desc = document.getElementById('exDesc').value.trim();
+  const cat = document.getElementById('exCat').value;
+  const amount = parseFloat(document.getElementById('exAmount').value);
+  const errEl = document.getElementById('exError');
+  if(!date || !desc || !amount || amount <= 0){
+    errEl.textContent = 'Remplis la description et un montant valide avant d\'ajouter.';
+    errEl.style.display = 'block';
+    return;
+  }
+  errEl.style.display = 'none';
+  expenses.push({date, desc, cat, amount});
+  document.getElementById('exDesc').value = '';
+  document.getElementById('exAmount').value = '';
+  render();
+  save();
+}
+
+function removeIncome(i){ incomes.splice(i,1); render(); save(); }
+function removeExpense(i){ expenses.splice(i,1); render(); save(); }
+
+function isCurrentMonth(dateStr){
+  if(!dateStr) return false;
+  const d = new Date(dateStr);
+  const now = new Date();
+  return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+}
+
+function render(){
+  const incomeTable = document.getElementById('incomeTable');
+  incomeTable.innerHTML = '';
+  let totalIncome = 0;
+  incomes.forEach((row, i) => {
+    const inMonth = isCurrentMonth(row.date);
+    if(inMonth) totalIncome += row.amount;
+    const tr = document.createElement('tr');
+    if(!inMonth) tr.style.opacity = '0.45';
+    tr.innerHTML = `<td>${row.date}</td><td>${row.source}</td><td><span class="tag">${row.canal}</span></td><td class="amount">${fmt(row.amount)}</td><td><button class="del" onclick="removeIncome(${i})">&times;</button></td>`;
+    incomeTable.appendChild(tr);
+  });
+  document.getElementById('incomeEmpty').style.display = incomes.length ? 'none' : 'block';
+
+  let totalExpense = 0;
+  const catTotals = {};
+  const expenseTable = document.getElementById('expenseTable');
+  expenseTable.innerHTML = '';
+  expenses.forEach((row, i) => {
+    const inMonth = isCurrentMonth(row.date);
+    if(inMonth){
+      totalExpense += row.amount;
+      catTotals[row.cat] = (catTotals[row.cat] || 0) + row.amount;
+    }
+    const tr = document.createElement('tr');
+    if(!inMonth) tr.style.opacity = '0.45';
+    tr.innerHTML = `<td>${row.date}</td><td>${row.desc}</td><td><span class="tag">${row.cat}</span></td><td class="amount">${fmt(row.amount)}</td><td><button class="del" onclick="removeExpense(${i})">&times;</button></td>`;
+    expenseTable.appendChild(tr);
+  });
+  document.getElementById('expenseEmpty').style.display = expenses.length ? 'none' : 'block';
+
+  document.getElementById('totalIncome').textContent = fmt(totalIncome);
+  document.getElementById('totalExpense').textContent = fmt(totalExpense);
+  const net = totalIncome - totalExpense;
+  const netEl = document.getElementById('netSavings');
+  netEl.textContent = fmt(net);
+  netEl.className = 'value ' + (net >= 0 ? 'pos' : 'neg');
+
+  const barsWrap = document.getElementById('categoryBars');
+  barsWrap.innerHTML = '';
+  const maxCat = Math.max(1, ...Object.values(catTotals));
+  Object.entries(catTotals).forEach(([cat, amt]) => {
+    const pct = Math.round((amt / maxCat) * 100);
+    const div = document.createElement('div');
+    div.className = 'cat-row';
+    div.innerHTML = `<span class="cat-name">${cat}</span><div class="bar-bg"><div class="bar-fill" style="width:${pct}%"></div></div><span class="cat-amount">${fmt(amt)}</span>`;
+    barsWrap.appendChild(div);
+  });
+}
+
+function renderGoal(){
+  const target = parseFloat(document.getElementById('goalTarget').value) || 0;
+  const current = parseFloat(document.getElementById('goalCurrent').value) || 0;
+  const pct = target > 0 ? Math.min(100, Math.round((current / target) * 100)) : 0;
+  document.getElementById('goalText').textContent = fmt(current) + ' / ' + fmt(target);
+  document.getElementById('goalPercent').textContent = pct + '%';
+  document.getElementById('goalBar').style.width = pct + '%';
+}
+
+function collectState(){
+  try{
+    return {
+      incomes, expenses,
+      accounts: {
+        wave: document.getElementById('accWave').value,
+        om: document.getElementById('accOM').value,
+        momo: document.getElementById('accMoMo').value,
+        other: document.getElementById('accOther').value
+      },
+      goal: {
+        target: document.getElementById('goalTarget').value,
+        current: document.getElementById('goalCurrent').value
+      }
+    };
+  }catch(e){
+    return {incomes:[], expenses:[], accounts:{}, goal:{}};
+  }
+}
+
+let storageAvailable = null;
+function hasStorage(){
+  if(storageAvailable !== null) return storageAvailable;
+  try{
+    const s = window.localStorage;
+    const k = '__test__';
+    s.setItem(k, '1');
+    s.removeItem(k);
+    storageAvailable = true;
+  }catch(e){
+    storageAvailable = false;
+  }
+  return storageAvailable;
+}
+
+function save(){
+  if(!hasStorage()) return;
+  try{
+    localStorage.setItem('budgetData', JSON.stringify(collectState()));
+  }catch(e){
+    console.log('Sauvegarde impossible', e);
+  }
+}
+
+function restore(){
+  if(!hasStorage()) return;
+  try{
+    const raw = localStorage.getItem('budgetData');
+    if(!raw) return;
+    const data = JSON.parse(raw);
+    incomes = data.incomes || [];
+    expenses = data.expenses || [];
+    document.getElementById('accWave').value = data.accounts?.wave || 0;
+    document.getElementById('accOM').value = data.accounts?.om || 0;
+    document.getElementById('accMoMo').value = data.accounts?.momo || 0;
+    document.getElementById('accOther').value = data.accounts?.other || 0;
+    document.getElementById('goalTarget').value = data.goal?.target || 0;
+    document.getElementById('goalCurrent').value = data.goal?.current || 0;
+  }catch(e){
+    console.log('Rien à recharger', e);
+  }
+}
+
+function exportData(){
+  try{
+    const data = JSON.stringify(collectState(), null, 2);
+    const dataUri = 'data:application/json;charset=utf-8,' + encodeURIComponent(data);
+    const a = document.createElement('a');
+    a.href = dataUri;
+    a.download = 'mon-budget-' + new Date().toISOString().slice(0,10) + '.json';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  }catch(e){
+    alert("Le téléchargement n'a pas fonctionné sur ce navigateur. Essaie avec Chrome ou Safari, ou copie ce texte à la main :\n\n" + JSON.stringify(collectState()));
+  }
+}
+
+function importData(event){
+  const file = event.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try{
+      const data = JSON.parse(e.target.result);
+      incomes = data.incomes || [];
+      expenses = data.expenses || [];
+      document.getElementById('accWave').value = data.accounts?.wave || 0;
+      document.getElementById('accOM').value = data.accounts?.om || 0;
+      document.getElementById('accMoMo').value = data.accounts?.momo || 0;
+      document.getElementById('accOther').value = data.accounts?.other || 0;
+      document.getElementById('goalTarget').value = data.goal?.target || 0;
+      document.getElementById('goalCurrent').value = data.goal?.current || 0;
+      render();
+      renderGoal();
+    }catch(err){
+      alert("Ce fichier n'est pas valide.");
+    }
+  };
+  reader.readAsText(file);
+}
+
+restore();
+if('serviceWorker' in navigator){
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+  });
+}
+const todayStr = new Date().toISOString().slice(0,10);
+document.getElementById('inDate').value = todayStr;
+document.getElementById('exDate').value = todayStr;
+if(incomes.length === 0 && expenses.length === 0){
+  const today = new Date().toISOString().slice(0,10);
+  incomes = [
+    {date: today, source: '⚠️ Exemple — supprime-moi', canal: 'Wave', amount: 75000}
+  ];
+  expenses = [
+    {date: today, desc: '⚠️ Exemple — supprime-moi', cat: 'Logement', amount: 30000}
+  ];
+}
+render();
+renderGoal();
+</script>
+</body>
+</html>
